@@ -6,7 +6,7 @@
 </h1>
 
 <h3 align="center">
-    A Go backend service for managing healthcare needs
+    A Go backend service for customer forum
 </h3>
 
 <p align="center">
@@ -30,16 +30,16 @@
 
 ## Overview
 
-- **Robust features for healthcare management.** Provides a comprehensive solution to manage healthcare needs efficiently.
+- **Robust features for customer forum management.** Provides a comprehensive solution to manage forum needs efficiently.
 - **RESTful API.** Access and manage data seamlessly through a well-defined REST API.
 - **Easy integration.** Integrate with various frontend applications and services effortlessly.
 - **Cross-platform.** Works smoothly on any environment that supports Go.
 
-To learn more about configuration, usage, and features of Nagaricare, take a look at [the documentation](https://intern-bn.com/docs).
+To learn more about configuration, usage, and features of NagariCare, take a look at [the documentation](https://intern-bn.com/docs).
 
 ## Installation and Usage
 
-Nagaricare requires the latest version of [Go](https://golang.org/dl/) to run. 
+NagariCare requires the latest version of [Go](https://golang.org/dl/) to run. 
 
 ### Running the service
 
