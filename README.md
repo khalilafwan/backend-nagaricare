@@ -11,17 +11,17 @@
 
 <p align="center">
     <strong>
-        <a href="https://github.com/yourusername/nagaricare">GitHub</a>
+        <a href="https://github.com/khalilafwan/backend-nagaricare">GitHub</a>
         •
-        <a href="https://yourwebsite.com/docs">Docs</a>
+        <a href="https://docs.flutter.dev/">Docs</a>
         •
-        <a href="https://yourwebsite.com/demo">Demo</a>
+        <a href="https://flutter.dev">Demo</a>
     </strong>
 </p>
 <p align="center">
-    <a href="https://github.com/yourusername/nagaricare/actions"><img
+    <a href="https://github.com/khalilafwan/backend-nagaricare/actions"><img
         alt="Build Status"
-        src="https://github.com/yourusername/nagaricare/workflows/Build/badge.svg"></a>
+        src="https://github.com/khalilafwan/backend-nagaricare/workflows/Build/badge.svg"></a>
 </p>
 
 <p align="center">
@@ -35,7 +35,7 @@
 - **Easy integration.** Integrate with various frontend applications and services effortlessly.
 - **Cross-platform.** Works smoothly on any environment that supports Go.
 
-To learn more about configuration, usage, and features of Nagaricare, take a look at [the documentation](https://yourwebsite.com/docs).
+To learn more about configuration, usage, and features of Nagaricare, take a look at [the documentation](https://intern-bn.com/docs).
 
 ## Installation and Usage
 
@@ -46,7 +46,7 @@ Nagaricare requires the latest version of [Go](https://golang.org/dl/) to run.
 Clone the repository and run the following commands:
 
 ```sh
-git clone https://github.com/yourusername/nagaricare.git
-cd nagaricare
+git clone https://github.com/khalilafwan/backend-nagaricare.git
+cd backend-nagaricare
 go mod tidy
 go run main.go
