@@ -232,7 +232,7 @@ func SaveUserPhoto(c *fiber.Ctx) error {
 
 // UpdateUser updates an existing user data
 func UpdateUser(c *fiber.Ctx) error {
-	id := c.Params("id_user")
+	ID_user := c.Params("id_user")
 	var req entity.User
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
@@ -240,7 +240,7 @@ func UpdateUser(c *fiber.Ctx) error {
 
 	// Check if post exists
 	var existingUser string
-	err := database.DB.QueryRow("SELECT id_user FROM users WHERE id_user = ?", id).Scan(&existingUser)
+	err := database.DB.QueryRow("SELECT id_user FROM users WHERE id_user = ?", ID_user).Scan(&existingUser)
 	if err == sql.ErrNoRows {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
 	} else if err != nil {
@@ -249,7 +249,7 @@ func UpdateUser(c *fiber.Ctx) error {
 	}
 
 	// Update post
-	_, err = database.DB.Exec("UPDATE users SET email = ?, name = ?, phone = ? WHERE id_user = ?", req.Email, req.Name, req.Phone, id)
+	_, err = database.DB.Exec("UPDATE users SET email = ?, name = ?, phone = ? WHERE id_user = ?", req.Email, req.Name, req.Phone, ID_user)
 	if err != nil {
 		log.Println("Error updating post in database:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not update post"})
