@@ -25,5 +25,5 @@ func SetupRoutes(app *fiber.App) {
 	user.Get("/", controllers.GetUsers)                                   // Get all users
 	user.Get("/:id_user", controllers.GetUserDetails)                     // Get user details by email
 	user.Put("/uploadprofilepicture/:id_user", controllers.SaveUserPhoto) // Save user profile picture
-	user.Put("/:id_user", controllers.SaveUserPhoto)                      // Edit user profile data
+	user.Put("/:id_user", controllers.UpdateUser)                         // Edit user profile data
 }

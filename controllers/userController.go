@@ -251,9 +251,9 @@ func UpdateUser(c *fiber.Ctx) error {
 	// Update post
 	_, err = database.DB.Exec("UPDATE users SET email = ?, name = ?, phone = ? WHERE id_user = ?", req.Email, req.Name, req.Phone, ID_user)
 	if err != nil {
-		log.Println("Error updating post in database:", err)
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not update post"})
+		log.Println("Error updating user in database:", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not update user"})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Post updated successfully"})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "User updated successfully"})
 }
