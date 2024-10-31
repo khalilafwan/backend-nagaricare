@@ -229,3 +229,31 @@ func SaveUserPhoto(c *fiber.Ctx) error {
 		"profile_picture": relativePath,
 	})
 }
+
+// UpdateUser updates an existing user data
+func UpdateUser(c *fiber.Ctx) error {
+	id := c.Params("id_user")
+	var req entity.User
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	// Check if post exists
+	var existingUser string
+	err := database.DB.QueryRow("SELECT id_user FROM users WHERE id_user = ?", id).Scan(&existingUser)
+	if err == sql.ErrNoRows {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
+	} else if err != nil {
+		log.Println("Error querying user from database:", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
+	}
+
+	// Update post
+	_, err = database.DB.Exec("UPDATE users SET email = ?, name = ?, phone = ? WHERE id_user = ?", req.Email, req.Name, req.Phone, id)
+	if err != nil {
+		log.Println("Error updating post in database:", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not update post"})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Post updated successfully"})
+}

@@ -5,7 +5,6 @@ import (
 	"backend-nagaricare/entity"
 	"database/sql"
 	"log"
-	"net/http"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -139,14 +138,14 @@ func UpdatePost(c *fiber.Ctx) error {
 	id := c.Params("id_post")
 	var req entity.Post
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
 	// Check if post exists
 	var existingPost string
 	err := database.DB.QueryRow("SELECT id_posts FROM posts WHERE id_posts = ?", id).Scan(&existingPost)
 	if err == sql.ErrNoRows {
-		return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "Post not found"})
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Post not found"})
 	} else if err != nil {
 		log.Println("Error querying post from database:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
@@ -159,7 +158,7 @@ func UpdatePost(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not update post"})
 	}
 
-	return c.Status(http.StatusOK).JSON(fiber.Map{"message": "Post updated successfully"})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Post updated successfully"})
 }
 
 // DeletePost deletes a post from the database
@@ -170,7 +169,7 @@ func DeletePost(c *fiber.Ctx) error {
 	var existingPost string
 	err := database.DB.QueryRow("SELECT id_posts FROM posts WHERE id_posts = ?", id).Scan(&existingPost)
 	if err == sql.ErrNoRows {
-		return c.Status(http.StatusNotFound).JSON(fiber.Map{"error": "Post not found"})
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Post not found"})
 	} else if err != nil {
 		log.Println("Error querying post from database:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
@@ -180,8 +179,8 @@ func DeletePost(c *fiber.Ctx) error {
 	_, err = database.DB.Exec("DELETE FROM posts WHERE id_posts = ?", id)
 	if err != nil {
 		log.Println("Error deleting post from database:", err)
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Could not delete post"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not delete post"})
 	}
 
-	return c.Status(http.StatusOK).JSON(fiber.Map{"message": "Post deleted successfully"})
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Post deleted successfully"})
 }
