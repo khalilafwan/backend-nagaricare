@@ -5,6 +5,7 @@ import (
 	"backend-nagaricare/entity"
 	"database/sql"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -88,7 +89,7 @@ func GetUserDetails(c *fiber.Ctx) error {
 
 	// Query the database for the user details
 	var user entity.User
-	err := database.DB.QueryRow("SELECT id_user, email, name, phone FROM users WHERE id_user = ?", ID_user).Scan(&user.ID_user, &user.Email, &user.Name, &user.Phone)
+	err := database.DB.QueryRow("SELECT id_user, email, name, phone, profile_picture FROM users WHERE id_user = ?", ID_user).Scan(&user.ID_user, &user.Email, &user.Name, &user.Phone, &user.Picture)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -158,19 +159,18 @@ func SaveUserPhoto(c *fiber.Ctx) error {
 		})
 	}
 
-	// Check if the user exists
+	// Check if the user exists and retrieve the current profile picture path
 	db := database.DB
-	var exists bool
-	var currentProfilePicturePath string
-	err := db.QueryRow(`SELECT EXISTS(SELECT 1 FROM users WHERE id_user = ?), profile_picture FROM users WHERE id_user = ?`, ID_user, ID_user).Scan(&exists, &currentProfilePicturePath)
+	var currentProfilePicturePath sql.NullString // Allows for null values
+	err := db.QueryRow(`SELECT profile_picture FROM users WHERE id_user = ?`, ID_user).Scan(&currentProfilePicturePath)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "User not found",
+			})
+		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Database query failed",
-		})
-	}
-	if !exists {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "User not found",
 		})
 	}
 
@@ -201,8 +201,8 @@ func SaveUserPhoto(c *fiber.Ctx) error {
 	}
 
 	// Delete the previous profile picture if it exists and is not the default image
-	if currentProfilePicturePath != "" && currentProfilePicturePath != "/default/profile_picture.png" {
-		oldFilePath := filepath.Join(".", currentProfilePicturePath)
+	if currentProfilePicturePath.Valid && currentProfilePicturePath.String != "/default/profile_picture.png" {
+		oldFilePath := filepath.Join(".", currentProfilePicturePath.String)
 		if _, err := os.Stat(oldFilePath); err == nil {
 			if err := os.Remove(oldFilePath); err != nil {
 				log.Printf("Failed to delete old profile picture: %s", err)
@@ -230,15 +230,85 @@ func SaveUserPhoto(c *fiber.Ctx) error {
 	})
 }
 
+// GetUserPhoto retrieves the user's profile picture based on their ID
+func GetUserPhoto(c *fiber.Ctx) error {
+	// Parse the user ID from the URL parameter
+	ID_user := c.Params("id_user")
+	if ID_user == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "User ID is required",
+		})
+	}
+
+	// Check if the user exists and retrieve the profile picture path
+	db := database.DB
+	var profilePicturePath string
+	err := db.QueryRow(`SELECT profile_picture FROM users WHERE id_user = ?`, ID_user).Scan(&profilePicturePath)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "User not found",
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Database query failed",
+		})
+	}
+
+	// If the profile picture path is empty, return null in the JSON response
+	if profilePicturePath == "" {
+		return c.JSON(fiber.Map{
+			"profile_picture": nil,
+		})
+	}
+
+	// Build the absolute path for the profile picture
+	absolutePath := filepath.Join(".", profilePicturePath)
+
+	// Open and read the profile picture file
+	file, err := os.Open(absolutePath)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to open profile picture",
+		})
+	}
+	defer file.Close()
+
+	// Read file content as bytes
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to read profile picture file",
+		})
+	}
+
+	// Set the appropriate content type
+	fileExt := strings.ToLower(filepath.Ext(absolutePath))
+	var contentType string
+	switch fileExt {
+	case ".jpg", ".jpeg":
+		contentType = "image/jpeg"
+	case ".png":
+		contentType = "image/png"
+	default:
+		contentType = "application/octet-stream" // Fallback for unknown types
+	}
+
+	// Set the response content type and send the file content
+	c.Set("Content-Type", contentType)
+	return c.Send(fileBytes)
+}
+
 // UpdateUser updates an existing user data
 func UpdateUser(c *fiber.Ctx) error {
 	ID_user := c.Params("id_user")
 	var req entity.User
+	log.Printf("Request data: %+v\n", req)
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
-	// Check if post exists
+	// Check if the user exists
 	var existingUser string
 	err := database.DB.QueryRow("SELECT id_user FROM users WHERE id_user = ?", ID_user).Scan(&existingUser)
 	if err == sql.ErrNoRows {
@@ -248,8 +318,21 @@ func UpdateUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
 	}
 
-	// Update post
-	_, err = database.DB.Exec("UPDATE users SET email = ?, name = ?, phone = ? WHERE id_user = ?", req.Email, req.Name, req.Phone, ID_user)
+	// Set default values if any fields are nil
+	if req.Phone == nil {
+		req.Phone = new(string)
+		*req.Phone = "" // Set a default empty string if needed
+	}
+	// if req.Picture == nil {
+	// 	req.Picture = new(string)
+	// 	*req.Picture = "" // Set a default empty string if needed
+	// }
+
+	// Update user
+	_, err = database.DB.Exec(
+		"UPDATE users SET email = ?, name = ?, phone = ? WHERE id_user = ?",
+		req.Email, req.Name, req.Phone, ID_user,
+	)
 	if err != nil {
 		log.Println("Error updating user in database:", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not update user"})
