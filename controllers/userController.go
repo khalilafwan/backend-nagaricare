@@ -174,9 +174,25 @@ func SaveUserPhoto(c *fiber.Ctx) error {
 		})
 	}
 
-	// Parse the uploaded file
+	// Check if no file is uploaded to set profile_picture to NULL
 	file, err := c.FormFile("profile_picture")
-	if err != nil {
+	if file == nil {
+		// Set profile_picture to NULL in the database
+		query := `UPDATE users SET profile_picture = NULL WHERE id_user = ?`
+		_, err = db.Exec(query, ID_user)
+		if err != nil {
+			log.Printf("Failed to execute query: %s, error: %s", query, err.Error())
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Database update failed",
+			})
+		}
+
+		// Return success response indicating profile picture was set to NULL
+		return c.JSON(fiber.Map{
+			"message":         "Profile picture removed successfully",
+			"profile_picture": nil,
+		})
+	} else if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "File upload failed",
 		})
