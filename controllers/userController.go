@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"backend-nagaricare/database"
-	"backend-nagaricare/entity"
+	"backend-nagaricare/models"
 	"database/sql"
 	"fmt"
 	"io"
@@ -18,7 +18,7 @@ import (
 // CreateUser handles user sign-up and inserts user details into the database
 func CreateUser(c *fiber.Ctx) error {
 	// Parse the request body into the User struct
-	var req entity.User
+	var req models.User
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
@@ -55,9 +55,9 @@ func GetUsers(c *fiber.Ctx) error {
 	}
 	defer rows.Close()
 
-	var users []entity.User
+	var users []models.User
 	for rows.Next() {
-		var user entity.User
+		var user models.User
 		// Scan each row into the User struct
 		if err := rows.Scan(&user.ID_user, &user.Email, &user.Name, &user.Phone, &user.Picture); err != nil {
 			log.Println("Error scanning user:", err)
@@ -88,7 +88,7 @@ func GetUserDetails(c *fiber.Ctx) error {
 	}
 
 	// Query the database for the user details
-	var user entity.User
+	var user models.User
 	err := database.DB.QueryRow("SELECT id_user, email, name, phone, profile_picture FROM users WHERE id_user = ?", ID_user).Scan(&user.ID_user, &user.Email, &user.Name, &user.Phone, &user.Picture)
 
 	if err != nil {
@@ -318,7 +318,7 @@ func GetUserPhoto(c *fiber.Ctx) error {
 // UpdateUser updates an existing user data
 func UpdateUser(c *fiber.Ctx) error {
 	ID_user := c.Params("id_user")
-	var req entity.User
+	var req models.User
 	log.Printf("Request data: %+v\n", req)
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})

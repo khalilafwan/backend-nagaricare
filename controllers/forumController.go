@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"backend-nagaricare/database"
-	"backend-nagaricare/entity"
+	"backend-nagaricare/models"
 	"database/sql"
 	"log"
 	"time"
@@ -20,9 +20,9 @@ func GetAllPosts(c *fiber.Ctx) error {
 	}
 	defer rows.Close()
 
-	var posts []entity.Post
+	var posts []models.Post
 	for rows.Next() {
-		var post entity.Post
+		var post models.Post
 		var createdAtStr string // Temporarily hold created_at as string
 
 		// Scan the data into the Post struct fields, created_at goes into createdAtStr
@@ -49,7 +49,7 @@ func GetAllPosts(c *fiber.Ctx) error {
 func GetPostByID(c *fiber.Ctx) error {
 	id := c.Params("id_post") // Post ID from URL parameters
 
-	var post entity.Post
+	var post models.Post
 	var createdAtStr string // Hold created_at as a string
 
 	// Query the database to get the post by its ID
@@ -80,7 +80,7 @@ func GetPostByID(c *fiber.Ctx) error {
 func GetPostByUserID(c *fiber.Ctx) error {
 	ID_user := c.Params("id_user") // Retrieve user ID from URL parameters
 
-	var posts []entity.Post
+	var posts []models.Post
 	rows, err := database.DB.Query("SELECT id_posts, title, content, id_user, created_at FROM posts WHERE id_user = ?", ID_user)
 	if err != nil {
 		log.Println("Error querying posts by user ID:", err)
@@ -89,7 +89,7 @@ func GetPostByUserID(c *fiber.Ctx) error {
 	defer rows.Close()
 
 	for rows.Next() {
-		var post entity.Post
+		var post models.Post
 		var createdAtStr string
 		if err := rows.Scan(&post.ID_Posts, &post.Title, &post.Content, &post.ID_user, &createdAtStr); err != nil {
 			log.Println("Error scanning post:", err)
@@ -118,7 +118,7 @@ func GetPostByUserID(c *fiber.Ctx) error {
 
 // CreatePost inserts a new post into the database
 func CreatePost(c *fiber.Ctx) error {
-	var req entity.Post
+	var req models.Post
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
@@ -136,7 +136,7 @@ func CreatePost(c *fiber.Ctx) error {
 // UpdatePost updates an existing post
 func UpdatePost(c *fiber.Ctx) error {
 	id := c.Params("id_post")
-	var req entity.Post
+	var req models.Post
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
